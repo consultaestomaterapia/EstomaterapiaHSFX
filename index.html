@@ -9,7 +9,6 @@
         navigator.serviceWorker.register('sw.js');
       }
     </script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedido de Material de Ostomia - HSFX</title>
@@ -987,7 +986,7 @@ function renderCatalog() {
             const qty = sel ? sel.qty : 1;
             
             html += `
-            <div class="product-row ${sel ? 'selected' : ''}" onclick="tog('${activeBrand}','${p.ref}','${p.n.replace(/'/g,"\'")}','${p.cnp}')">
+            <div class="product-row ${sel ? 'selected' : ''}" onclick="tog('${activeBrand}','${p.ref}','${p.n.replace(/'/g,"\\'")}','${p.cnp}')">
                 <div class="checkbox-custom">
                     ${sel ? '<i class="ti ti-check"></i>' : ''}
                 </div>
@@ -997,9 +996,9 @@ function renderCatalog() {
                 </div>
                 ${sel ? `
                 <div class="qty-ctrl" onclick="event.stopPropagation()">
-                    <button class="qty-btn" onclick="chQ('${activeBrand}','${p.ref}','${p.n.replace(/'/g,"\'")}','${p.cnp}',-1)">−</button>
+                    <button class="qty-btn" onclick="chQ('${activeBrand}','${p.ref}','${p.n.replace(/'/g,"\\'")}','${p.cnp}',-1)">−</button>
                     <span style="min-width:20px; text-align:center; font-weight:bold">${qty}</span>
-                    <button class="qty-btn" onclick="chQ('${activeBrand}','${p.ref}','${p.n.replace(/'/g,"\'")}','${p.cnp}',1)">+</button>
+                    <button class="qty-btn" onclick="chQ('${activeBrand}','${p.ref}','${p.n.replace(/'/g,"\\'")}','${p.cnp}',1)">+</button>
                 </div>` : ''}
             </div>`;
         });
@@ -1081,10 +1080,7 @@ function enviar() {
         return;
     }
 
-    const lista = items.length ? items.map(i => `  • ${i.brand} | ${i.name}
-    Ref: ${i.ref} | CNP: ${i.cnp} | Qtd: ${i.qty} cx`).join('
-
-') : '  (Sem produtos selecionados no catálogo)';
+    const lista = items.length ? items.map(i => `  • ${i.brand} | ${i.name}\n    Ref: ${i.ref} | CNP: ${i.cnp} | Qtd: ${i.qty} cx`).join('\n\n') : '  (Sem produtos selecionados no catálogo)';
     
     const body = [
         'CONSULTA DE ESTOMATERAPIA — HSFX',
@@ -1104,16 +1100,12 @@ function enviar() {
         'MATERIAL SOLICITADO',
         '─────────────────────────────────────────',
         lista,
-        obs ? `
-
-OBSERVAÇÕES / REFERÊNCIAS ADICIONAIS
-${obs}` : '',
+        obs ? `\n\nOBSERVAÇÕES / REFERÊNCIAS ADICIONAIS\n${obs}` : '',
         '',
         '─────────────────────────────────────────',
         `Data: ${new Date().toLocaleDateString('pt-PT')}`,
         'Pedido gerado via App de Estomaterapia HSFX',
-    ].filter(l => l !== '').join('
-');
+    ].filter(l => l !== '').join('\n');
 
     const subj = encodeURIComponent(`Pedido ostomia — ${nome} — Proc. ${proc}`);
     const contactEmail = 'Fmatos@ulslo.min-saude.pt';
