@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <!-- CONFIGURAÇÕES DE APP (PWA) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0F6E56">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido de Material de Ostomia - HSFX</title>
+    <!-- Ícones Tabler -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        :root {
+            --primary: #0F6E56;
+            --primary-light: #E1F5EE;
+            --primary-dark: #085041;
+            --accent: #E24B4A;
+            --bg-main: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --text-main: #1E293B;
+            --text-sec: #64748B;
+            --border: #E2E8F0;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            line-height: 1.5;
+            padding-bottom: 40px;
+        }
+
+        /* Header */
+        .hdr {
+            background: var(--primary);
+            color: white;
+            padding: 20px 16px;
+            text-align: center;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .hdr-logo {
+            background: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+        .hdr-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+        .hdr-sub { font-size: 0.9rem; opacity: 0.9; }
+
+        /* Layout Containers */
+        .container { max-width: 600px; margin: 0 auto; padding: 0 16px; }
+        .section-title { 
+            font-size: 0.9rem; 
+            font-weight: 700; 
+            color: var(--text-sec); 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+            margin: 24px 0 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+        }
+
+        /* Forms */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .full-width { grid-column: span 2; }
+        
+        .ff { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+        .ff label { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+        .ff label span { color: var(--accent); }
+        
+        input, select, textarea {
+            font-size: 16px !important; /* Evita zoom automático no iOS */
+            padding: 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            background: #FDFDFD;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .rerr { border-color: var(--accent) !important; }
+        .em { font-size: 0.75rem; color: var(--accent); margin-top: 2px; display: none; }
+
+        /* Brand Tabs */
+        .btabs { 
+            display: flex; 
+            gap: 8px; 
+            overflow-x: auto; 
+            padding: 4px 0; 
+            margin-bottom: 16px; 
+            scrollbar-width: none; 
+        }
+        .btabs::-webkit-scrollbar { display: none; }
+        .btab {
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 50px;
+            border: 1.5px solid var(--border);
+            background: white;
+            color: var(--text-sec);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .btab.on {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Catalog Cards */
+        .cat-section { margin-bottom: 20px; }
+        .cat-header {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .product-row {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            background: white;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .product-row:last-child { border-bottom: none; }
+        .product-row.selected { background: var(--primary-light); }
+        
+        .checkbox-custom {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: white;
+            font-size: 14px;
+        }
+        .selected .checkbox-custom {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .p-info { flex: 1; }
+        .p-name { font-size: 0.95rem; font-weight: 500; display: block; }
+        .p-meta { font-size: 0.8rem; color: var(--text-sec); font-family: monospace; }
+        .p-diam { 
+            font-size: 0.75rem; 
+            background: #eee; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            margin-left: 5px; 
+        }
+
+        .qty-ctrl {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 8px;
+        }
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .novo-badge {
+            font-size: 0.65rem;
+            background: var(--primary);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 4px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        /* Cart Summary */
+        .cart-box {
+            background: var(--primary-light);
+            border: 2px dashed var(--primary);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-qty { font-weight: 700; color: var(--primary); }
+
+        /* Send Button */
+        .send-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: var(--radius);
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(15,110,86,0.3);
+            transition: background 0.2s;
+        }
+        .send-btn:hover { background: var(--primary-dark); }
+
+        @media (max-width: 480px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="hdr">
+    <div class="hdr-logo"><i class="ti ti-heart-rate-monitor" style="font-size:28px;color:var(--primary)"></i></div>
+    <div class="hdr-title">Pedido de Material de Ostomia</div>
+    <div class="hdr-sub">Consulta de Estomaterapia — HSFX<br>ULS Lisboa Ocidental</div>
+</div>
+
+<div class="container">
+    <div class="section-title"><i class="ti ti-user"></i> Dados do Doente <span style="color:var(--accent); font-size: 0.7rem;">* obrigatórios</span></div>
+    <div class="card">
+        <div class="form-grid">
+            <div class="ff full-width">
+                <label>Nome Completo <span>*</span></label>
+                <input type="text" id="f_nome" placeholder="Ex: João Silva">
+                <div class="em" id="e_nome">Por favor, insira o seu nome.</div>
+            </div>
+            <div class="ff">
+                <label>Nº Processo HSFX <span>*</span></label>
+                <input type="text" id="f_proc" placeholder="000000">
+                <div class="em" id="e_proc">Campo obrigatório.</div>
+            </div>
+            <div class="ff">
+                <label>Nº Utente SNS <span>*</span></label>
+                <input type="text" id="f_sns" placeholder="1234567890">
+                <div class="em" id="e_sns">Campo obrigatório.</div>
+            </div>
+            <div class="ff">
+                <label>Data de Nascimento</label>
+                <input type="date" id="f_dob">
+            </div>
+            <div class="ff">
+                <label>Tipo de Ostomia</label>
+                <select id="f_tipo">
+                    <option value="">Selecionar...</option>
+                    <option>Colostomia</option>
+                    <option>Ileostomia</option>
+                </select>
+            </div>
+            <div class="ff">
+                <label>Telemóvel <span>*</span></label>
+                <input type="tel" id="f_tel" placeholder="912 345 678">
+                <div class="em" id="e_tel">Campo obrigatório.</div>
+            </div>
+            <div class="ff">
+                <label>E-mail</label>
+                <input type="email" id="f_email" placeholder="email@exemplo.pt">
+            </div>
+            <div class="ff full-width">
+                <label>Médico Prescritor</label>
+                <input type="text" id="f_medico" placeholder="Nome do médico">
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title"><i class="ti ti-box"></i> Selecione o Material</div>
+    <div class="btabs" id="brandTabs"></div>
+    <div id="catalogArea"></div>
+
+    <div class="section-title"><i class="ti ti-message-circle"></i> Observações</div>
+    <div class="card">
+        <textarea id="f_obs" style="width:100%; min-height: 100px;" placeholder="Ex: Referências específicas, quantidades adicionais ou pedidos urgentes..."></textarea>
+    </div>
+
+    <div class="section-title"><i class="ti ti-shopping-cart"></i> Resumo do Pedido</div>
+    <div class="cart-box" id="cartBox">
+        <p style="text-align:center; color:var(--text-sec); font-style:italic;">Nenhum produto selecionado</p>
+    </div>
+
+    <button class="send-btn" onclick="enviar()">
+        <i class="ti ti-mail-forward"></i>
+        Enviar Pedido por E-mail
+    </button>
+</div>
+
+<script>
+// O catálogo mantém a mesma estrutura de dados do seu original
+const CATALOG = {
+  "Convatec": [
+    {sys:"ESTEEM+® 1 Peça — Colostomia (Sacos Fechados)",icon:"ti-bandage",items:[
+      {n:"Saco Colo Fechado Opaco Grande 25mm Pré-cortado",d:"25mm",ref:"416704",cnp:"6210476",u:30},
+      {n:"Saco Colo Fechado Opaco Grande 30mm Pré-cortado",d:"30mm",ref:"416707",cnp:"6210484",u:30},
+      {n:"Saco Colo Fechado Opaco Grande 35mm Pré-cortado",d:"35mm",ref:"416710",cnp:"6210492",u:30},
+      {n:"Saco Colo Fechado Opaco Grande 40mm Pré-cortado",d:"40mm",ref:"416713",cnp:"6211300",u:30},
+      {n:"Saco Colo Fechado Opaco Grande 50mm Pré-cortado",d:"50mm",ref:"416715",cnp:"6211318",u:30},
+      {n:"Saco Colo Fechado Opaco Recortável 20/70mm",d:"20-70mm",ref:"416701",cnp:"6210518",u:30},
+      {n:"Saco Colo Fechado Opaco Pequeno c/Janela Recortável 20/70mm",d:"20-70mm",ref:"421816",cnp:"7017962",u:30},
+      {n:"Saco Colo Fechado Opaco Standard c/Janela Recortável 20/70mm",d:"20-70mm",ref:"421686",cnp:"6398511",u:30},
+      {n:"Stoma Cap Recortável 19/50mm",d:"19-50mm",ref:"175611",cnp:"6685388",u:30},
+      {n:"Saco Colo Fechado Transparente Grande Recortável 20/70mm",d:"20-70mm",ref:"416700",cnp:"6210500",u:30},
+    ]},
+    {sys:"ESTEEM SYNERGY® 2 Peças — Colostomia (Sacos Fechados)",icon:"ti-bandage",items:[
+      {n:"Saco Colo Fechado Opaco Pequeno 35mm",d:"35mm",ref:"416777",cnp:"6210393",u:30},
+      {n:"Saco Colo Fechado Opaco Pequeno 48mm",d:"48mm",ref:"416781",cnp:"6210401",u:30},
+      {n:"Saco Colo Fechado Opaco Standard 35mm",d:"35mm",ref:"416775",cnp:"6210419",u:30},
+      {n:"Saco Colo Fechado Opaco Standard 48mm",d:"48mm",ref:"416779",cnp:"6210427",u:30},
+      {n:"Saco Colo Fechado Opaco Standard 61mm",d:"61mm",ref:"416783",cnp:"6210435",u:30},
+      {n:"Saco Colo Fechado Transparente Standard 35mm",d:"35mm",ref:"416774",cnp:"6210443",u:30},
+      {n:"Saco Colo Fechado Transparente Standard 48mm",d:"48mm",ref:"416778",cnp:"6210450",u:30},
+      {n:"Saco Colo Fechado Transparente Standard 61mm",d:"61mm",ref:"416782",cnp:"6210468",u:10},
+    ]},
+    {sys:"ESTEEM+® 1 Peça — Ileostomia (Sacos Drenáveis)",icon:"ti-bandage",items:[
+      {n:"Saco Ileo Aberto Opaco Standard Recortável 20/70mm",d:"20-70mm",ref:"416719",cnp:"6213108",u:10},
+      {n:"Saco Ileo Aberto Opaco c/Janela Standard Recortável 20/70mm",d:"20-70mm",ref:"423386",cnp:"7133108",u:30},
+      {n:"Saco Ileo Aberto Transparente Standard Recortável 20/70mm",d:"20-70mm",ref:"416718",cnp:"6213090",u:10},
+    ]},
+    {sys:"ESTEEM SYNERGY® 2 Peças — Ileostomia (Sacos Drenáveis)",icon:"ti-bandage",items:[
+      {n:"Saco Ileo Aberto Opaco Standard 35mm",d:"35mm",ref:"416796",cnp:"6213132",u:10},
+      {n:"Saco Ileo Aberto Opaco Standard 48mm",d:"48mm",ref:"416799",cnp:"6213157",u:10},
+      {n:"Saco Ileo Aberto Opaco Standard 61mm",d:"61mm",ref:"416902",cnp:"6213173",u:10},
+      {n:"Saco Ileo Aberto Transparente Standard 48mm",d:"48mm",ref:"416798",cnp:"6213140",u:10},
+      {n:"Saco Ileo Aberto Transparente Standard 61mm",d:"61mm",ref:"416901",cnp:"6213165",u:10},
+    ]},
+    {sys:"ESTEEM SYNERGY® / NATURA® — Placas",icon:"ti-layout-grid",items:[
+      {n:"Placa Flexível Recortável 35mm",d:"35mm",ref:"409265",cnp:"7919159",u:5},
+      {n:"Placa Flexível Recortável 48mm",d:"48mm",ref:"409266",cnp:"7919167",u:5},
+      {n:"Placa Flexível Recortável 61mm",d:"61mm",ref:"409267",cnp:"7919175",u:5},
+      {n:"Placa Stomahesive® Recortável 35mm",d:"35mm",ref:"405484",cnp:"7919183",u:5},
+      {n:"Placa Stomahesive® Recortável 48mm",d:"48mm",ref:"405485",cnp:"7919191",u:5},
+      {n:"Placa Stomahesive® Recortável 61mm",d:"61mm",ref:"405486",cnp:"7919209",u:5},
+      {n:"Placa Moldável Flexível 13-22mm/48mm",d:"13-22mm",ref:"411657",cnp:"6185926",u:10},
+      {n:"Placa Moldável Flexível 22-33mm/48mm",d:"22-33mm",ref:"411658",cnp:"6185934",u:10},
+      {n:"Placa Moldável Flexível 33-45mm/61mm",d:"33-45mm",ref:"411659",cnp:"6185942",u:10},
+      {n:"Placa Moldável Convexa 13-22mm/35mm",d:"13-22mm",ref:"409271",cnp:"6118919",u:5},
+      {n:"Placa Moldável Convexa 22-33mm/48mm",d:"22-33mm",ref:"409272",cnp:"6118927",u:5},
+      {n:"Placa Moldável Convexa 33-45mm/61mm",d:"33-45mm",ref:"409273",cnp:"6118935",u:5},
+      {n:"Placa Flexível Recortável 32mm",d:"32mm",ref:"410293",cnp:"7133058",u:10},
+      {n:"Placa Flexível Recortável 38mm",d:"38mm",ref:"410294",cnp:"7133041",u:10},
+      {n:"Placa Flexível Recortável 45mm",d:"45mm",ref:"410295",cnp:"7133033",u:10},
+      {n:"Placa Flexível Recortável 57mm",d:"57mm",ref:"410296",cnp:"7133025",u:10},
+      {n:"Placa Flexível Recortável 70mm",d:"70mm",ref:"410297",cnp:"7133017",u:10},
+      {n:"Placa Stomahesive® Recortável 32mm",d:"32mm",ref:"401980",cnp:"6990184",u:5},
+      {n:"Placa Stomahesive® Recortável 38mm",d:"38mm",ref:"401574",cnp:"7133009",u:10},
+      {n:"Placa Stomahesive® Recortável 45mm",d:"45mm",ref:"401575",cnp:"7132993",u:10},
+      {n:"Placa Stomahesive® Recortável 57mm",d:"57mm",ref:"401576",cnp:"7132985",u:10},
+      {n:"Placa Stomahesive® Recortável 70mm",d:"70mm",ref:"401577",cnp:"7132977",u:10},
+      {n:"Placa Accordion™ Plana Recortável 45mm",d:"45mm",ref:"421456",cnp:"7132746",u:10},
+      {n:"Placa Accordion™ Plana Recortável 57mm",d:"57mm",ref:"421460",cnp:"7132738",u:10},
+      {n:"Placa Accordion™ Plana Recortável 70mm",d:"70mm",ref:"421464",cnp:"7132720",u:10},
+      {n:"Placa Plana Moldável Flexível 13-22/45mm",d:"13-22mm",ref:"411801",cnp:"7132969",u:10},
+      {n:"Placa Plana Moldável Flexível 22-33/45mm",d:"22-33mm",ref:"411803",cnp:"7132951",u:10},
+      {n:"Placa Plana Moldável Flexível 33-45/57mm",d:"33-45mm",ref:"411805",cnp:"7132944",u:10},
+      {n:"Placa Plana Moldável Flexível 45-56/70mm",d:"45-56mm",ref:"411807",cnp:"7132936",u:10},
+      {n:"Placa Durahesive® Convexa Pré-cortada 19/45mm",d:"19mm",ref:"413179",cnp:"7132928",u:10},
+      {n:"Placa Durahesive® Convexa Pré-cortada 22/45mm",d:"22mm",ref:"413180",cnp:"7132910",u:10},
+      {n:"Placa Durahesive® Convexa Pré-cortada 25/45mm",d:"25mm",ref:"413181",cnp:"7132902",u:10},
+      {n:"Placa Durahesive® Convexa Pré-cortada 28/45mm",d:"28mm",ref:"413182",cnp:"7132894",u:10},
+      {n:"Placa Durahesive® Convexa Pré-cortada 32/45mm",d:"32mm",ref:"413183",cnp:"7132886",u:10},
+      {n:"Placa Durahesive® Convexa Pré-cortada 35/45mm",d:"35mm",ref:"413184",cnp:"7132878",u:10},
+      {n:"Placa Durahesive® Convexa Pré-cortada 38/57mm",d:"38mm",ref:"413185",cnp:"7133413",u:10},
+      {n:"Placa Moldável Convexa 13-22/45mm",d:"13-22mm",ref:"404592",cnp:"7132860",u:10},
+      {n:"Placa Moldável Convexa 22-33/45mm",d:"22-33mm",ref:"404593",cnp:"7132852",u:10},
+      {n:"Placa Moldável Convexa 33-45/57mm",d:"33-45mm",ref:"404594",cnp:"7132845",u:10},
+    ]},
+    {sys:"NATURA® 2 Peças — Colostomia",icon:"ti-bandage",items:[
+      {n:"Saco Colo Fechado Opaco Standard 32mm",d:"32mm",ref:"416400",cnp:"6990010",u:30},
+      {n:"Saco Colo Fechado Opaco Standard 38mm",d:"38mm",ref:"416403",cnp:"6990028",u:30},
+      {n:"Saco Colo Fechado Opaco Standard 45mm",d:"45mm",ref:"416406",cnp:"6990036",u:30},
+      {n:"Saco Colo Fechado Opaco Standard 57mm",d:"57mm",ref:"416409",cnp:"6990044",u:30},
+      {n:"Saco Colo Fechado Opaco Standard 70mm",d:"70mm",ref:"416412",cnp:"6990051",u:30},
+      {n:"Saco Colo Fechado Transparente Standard 45mm",d:"45mm",ref:"421803",cnp:"7017442",u:30},
+      {n:"Saco Colo Fechado Transparente Standard 57mm",d:"57mm",ref:"421804",cnp:"7017459",u:30},
+      {n:"Saco Colo Fechado Transparente Standard 70mm",d:"70mm",ref:"421805",cnp:"7017467",u:30},
+    ]},
+    {sys:"NATURA® 2 Peças — Ileostomia",icon:"ti-bandage",items:[
+      {n:"Saco Ileo Aberto Opaco Pediátrico c/clip 32mm",d:"32mm",ref:"401927",cnp:"7133629",u:10},
+      {n:"Saco Ileo Aberto Opaco Pequeno 38mm",d:"38mm",ref:"125916",cnp:"7133389",u:10},
+      {n:"Saco Ileo Aberto Opaco Pequeno 45mm",d:"45mm",ref:"125917",cnp:"7133371",u:10},
+      {n:"Saco Ileo Aberto Opaco Standard 38mm",d:"38mm",ref:"416415",cnp:"6989970",u:10},
+      {n:"Saco Ileo Aberto Opaco Standard 45mm",d:"45mm",ref:"423382",cnp:"7133165",u:30},
+      {n:"Saco Ileo Aberto Opaco Standard 57mm",d:"57mm",ref:"423383",cnp:"7133157",u:30},
+      {n:"Saco Ileo Aberto Opaco Standard 70mm",d:"70mm",ref:"423381",cnp:"7133140",u:30},
+      {n:"Saco Ileo Aberto Transparente Standard 45mm",d:"45mm",ref:"423380",cnp:"7133132",u:30},
+      {n:"Saco Ileo Aberto Transparente Standard 57mm",d:"57mm",ref:"423384",cnp:"7133124",u:30},
+      {n:"Saco Ileo Aberto Transparente Standard 70mm",d:"70mm",ref:"423385",cnp:"7133116",u:30},
+    ]},
+    {sys:"Acessórios ESENTA™",icon:"ti-tool",items:[
+      {n:"ESENTA™ Removedor de Adesivo em Spray 50ml",d:"50ml",ref:"423289",cnp:"7019950",u:1},
+      {n:"ESENTA™ Removedor de Adesivo em Toalhetes",d:"Cx30",ref:"423281",cnp:"7019943",u:30},
+      {n:"ESENTA™ Barreira Cutânea Spray 50ml",d:"50ml",ref:"423288",cnp:"7019935",u:1},
+      {n:"ESENTA™ Barreira Cutânea Toalhetes",d:"Cx30",ref:"423282",cnp:"7019927",u:30},
+      {n:"ESENTA™ Desodorizante Lubrificante 236ml",d:"236ml",ref:"423574",cnp:"7130757",u:1},
+      {n:"ESENTA™ Stomahesive® Pasta 60g",d:"60g",ref:"183910",cnp:"6640813",u:1},
+      {n:"ESENTA™ Seal Anel Moldável Fino 48mm",d:"Cx10",ref:"413504",cnp:"6412601",u:10},
+      {n:"ESENTA™ Seal Anel Moldável 98mm",d:"Cx10",ref:"413505",cnp:"6412619",u:10},
+      {n:"Cinto ajustável",d:"Cx1",ref:"175507",cnp:"6745745",u:1},
+      {n:"ESENTA™ Tiras retas hidrocolóides 3×11cm",d:"Cx60",ref:"423824",cnp:"7132324",u:60},
+      {n:"ESENTA™ XL Tiras semicirculares hidrocolóides",d:"Cx20",ref:"423827",cnp:"7132332",u:20},
+      {n:"ESENTA™ Diamonds™ Saquetas Gelificantes",d:"Cx100",ref:"420791",cnp:"7130609",u:100},
+    ]},
+  ],
+  "Coloplast": [
+    {sys:"SenSura® 1 Peça — Colostomia",icon:"ti-bandage",items:[
+      {n:"Saco Colo Fechado Opaco c/Janela Midi 10-66mm",d:"10-66mm",ref:"15020",cnp:"6399691",u:30},
+      {n:"Saco Colo Fechado Opaco c/Janela Maxi 10-76mm",d:"10-76mm",ref:"15030",cnp:"6399709",u:30},
+      {n:"Saco Colo Fechado Opaco Mini 10-66mm",d:"10-66mm",ref:"15420",cnp:"6185637",u:30},
+      {n:"Saco Colo Fechado Opaco Midi 10-66mm",d:"10-66mm",ref:"15450",cnp:"6185645",u:30},
+      {n:"Saco Colo Fechado Opaco Maxi 10-76mm",d:"10-76mm",ref:"15480",cnp:"6185660",u:30},
+      {n:"Saco Colo Fechado Transparente Maxi 10-76mm",d:"10-76mm",ref:"15470",cnp:"6185652",u:30},
+      {n:"Saco Colo Fechado Opaco Convex Light Midi 15-33mm",d:"15-33mm",ref:"15403",cnp:"7131870",u:30},
+      {n:"Saco Colo Fechado Opaco Convex Light Maxi 15-33mm",d:"15-33mm",ref:"15407",cnp:"7131862",u:30},
+      {n:"Saco Colo Fechado Opaco c/Janela Convex Light Maxi 15-43mm",d:"15-43mm",ref:"15071",cnp:"7131854",u:30},
+      {n:"Saco Colo Fechado Transparente Convex Light Maxi 15-43mm",d:"15-43mm",ref:"15406",cnp:"7131847",u:30},
+    ]},
+    {sys:"SenSura® 1 Peça — Ileostomia",icon:"ti-bandage",items:[
+      {n:"Saco Ileo Aberto Opaco c/Janela Midi 10-66mm",d:"10-66mm",ref:"15251",cnp:"6399717",u:30},
+      {n:"Saco Ileo Aberto Opaco c/Janela Maxi 10-76mm",d:"10-76mm",ref:"15281",cnp:"6399725",u:30},
+      {n:"Saco Ileo Aberto Opaco Mini 10-66mm",d:"10-66mm",ref:"15520",cnp:"6029090",u:30},
+      {n:"Saco Ileo Aberto Opaco Midi 10-66mm",d:"10-66mm",ref:"15550",cnp:"6185686",u:30},
+      {n:"Saco Ileo Aberto Opaco Maxi 10-76mm",d:"10-76mm",ref:"15580",cnp:"6185702",u:30},
+      {n:"Saco Ileo Aberto Transparente Maxi 10-76mm",d:"10-76mm",ref:"15570",cnp:"6185694",u:30},
+      {n:"Saco Ileo Aberto Opaco s/Janela Convex Light Midi 15-33mm",d:"15-33mm",ref:"15500",cnp:"7131839",u:30},
+      {n:"Saco Ileo Aberto Opaco c/Janela Convex Light Maxi 15-43mm",d:"15-43mm",ref:"15209",cnp:"7131821",u:30},
+      {n:"Saco Ileo Aberto Transparente Convex Light Maxi 15-43mm",d:"15-43mm",ref:"15206",cnp:"7131813",u:30},
+      {n:"Saco Ileo Aberto Opaco Convex Deep Maxi 15-43mm",d:"15-43mm",ref:"11277",cnp:"7131797",u:30},
+      {n:"Saco Ileo Aberto Opaco Convex Deep Xpro Maxi 15-43mm",d:"15-43mm",ref:"11278",cnp:"7131805",u:30},
+      {n:"Saco Ileo Alto Débito Aberto Opaco Convex Light Maxi 35-43mm",d:"35-43mm",ref:"19130",cnp:"7131789",u:30},
+    ]},
+    {sys:"SenSura® Click (2 peças) — Placas",icon:"ti-layout-grid",items:[
+      {n:"Placa Fixação Mecânica Plana 40mm",d:"40mm",ref:"10011",cnp:"6185256",u:30},
+      {n:"Placa Fixação Mecânica Plana 50mm",d:"50mm",ref:"10021",cnp:"6185264",u:30},
+      {n:"Placa Fixação Mecânica Plana 60mm",d:"60mm",ref:"10031",cnp:"6185272",u:30},
+      {n:"Placa Fixação Mecânica Plana 70mm",d:"70mm",ref:"10041",cnp:"6185280",u:30},
+      {n:"Placa Fixação Mecânica Plana Xpro 40mm",d:"40mm",ref:"10015",cnp:"6007401",u:30},
+      {n:"Placa Fixação Mecânica Plana Xpro 50mm",d:"50mm",ref:"10025",cnp:"6007393",u:30},
+      {n:"Placa Fixação Mecânica Plana Xpro 60mm",d:"60mm",ref:"10035",cnp:"6007419",u:30},
+      {n:"Placa Fixação Mecânica Convexa Leve 40mm",d:"40mm",ref:"11011",cnp:"6185538",u:30},
+      {n:"Placa Fixação Mecânica Convexa Leve 50mm",d:"50mm",ref:"11021",cnp:"6185546",u:30},
+      {n:"Placa Fixação Mecânica Convexa Leve 60mm",d:"60mm",ref:"11031",cnp:"6185553",u:30},
+      {n:"Placa Fixação Mecânica Convexa Leve 70mm",d:"70mm",ref:"11041",cnp:"6185561",u:30},
+      {n:"Placa Fixação Mecânica Convexa Profunda 40mm",d:"40mm",ref:"11270",cnp:"7133300",u:30},
+      {n:"Placa Fixação Mecânica Convexa Profunda 50mm",d:"50mm",ref:"11272",cnp:"7133322",u:30},
+      {n:"Placa Fixação Mecânica Convexa Profunda 60mm",d:"60mm",ref:"11274",cnp:"7133314",u:30},
+    ]},
+    {sys:"SenSura® Click — Sacos Colostomia (fixação mecânica)",icon:"ti-bandage",items:[
+      {n:"Saco Colo Fechado Opaco Mini 50mm",d:"50mm",ref:"10152",cnp:"6185306",u:30},
+      {n:"Saco Colo Fechado Opaco Midi 40mm",d:"40mm",ref:"10154",cnp:"6185314",u:30},
+      {n:"Saco Colo Fechado Opaco Midi 50mm",d:"50mm",ref:"10155",cnp:"6185322",u:30},
+      {n:"Saco Colo Fechado Opaco Midi 60mm",d:"60mm",ref:"10156",cnp:"6185330",u:30},
+      {n:"Saco Colo Fechado Opaco Maxi 40mm",d:"40mm",ref:"10164",cnp:"6185348",u:30},
+      {n:"Saco Colo Fechado Opaco Maxi 50mm",d:"50mm",ref:"10165",cnp:"6185355",u:30},
+      {n:"Saco Colo Fechado Opaco Maxi 60mm",d:"60mm",ref:"10166",cnp:"6185363",u:30},
+      {n:"Saco Colo Fechado Opaco Maxi 70mm",d:"70mm",ref:"10167",cnp:"6185371",u:30},
+      {n:"Saco Colo Fechado Transparente Maxi 40mm",d:"40mm",ref:"10184",cnp:"6185389",u:30},
+      {n:"Saco Colo Fechado Transparente Maxi 50mm",d:"50mm",ref:"10185",cnp:"6185397",u:30},
+      {n:"Saco Colo Fechado Transparente Maxi 60mm",d:"60mm",ref:"10186",cnp:"6185405",u:30},
+      {n:"Saco Colo Fechado Transparente Maxi 70mm",d:"70mm",ref:"10187",cnp:"6398479",u:30},
+    ]},
+    {sys:"SenSura® Click — Sacos Ileostomia (fixação mecânica)",icon:"ti-bandage",items:[
+      {n:"Saco Ileo Aberto Opaco Mini 40mm",d:"40mm",ref:"10351",cnp:"6185413",u:30},
+      {n:"Saco Ileo Aberto Opaco Mini 50mm",d:"50mm",ref:"10352",cnp:"6185421",u:30},
+      {n:"Saco Ileo Aberto Opaco Midi 40mm",d:"40mm",ref:"10354",cnp:"6185439",u:30},
+      {n:"Saco Ileo Aberto Opaco Midi 50mm",d:"50mm",ref:"10355",cnp:"6185447",u:30},
+      {n:"Saco Ileo Aberto Opaco Midi 60mm",d:"60mm",ref:"10356",cnp:"6185454",u:30},
+      {n:"Saco Ileo Aberto Opaco Maxi 40mm",d:"40mm",ref:"10364",cnp:"6185462",u:30},
+      {n:"Saco Ileo Aberto Opaco Maxi 50mm",d:"50mm",ref:"10365",cnp:"6185470",u:30},
+      {n:"Saco Ileo Aberto Opaco Maxi 60mm",d:"60mm",ref:"10366",cnp:"6185488",u:30},
+      {n:"Saco Ileo Aberto Opaco Maxi 70mm",d:"70mm",ref:"10367",cnp:"6185496",u:30},
+      {n:"Saco Ileo Aberto Transparente Maxi 40mm",d:"40mm",ref:"10384",cnp:"6185504",u:30},
+      {n:"Saco Ileo Aberto Transparente Maxi 50mm",d:"50mm",ref:"10385",cnp:"6185512",u:30},
+      {n:"Saco Ileo Aberto Transparente Maxi 60mm",d:"60mm",ref:"10386",cnp:"6185520",u:30},
+      {n:"Saco Ileo Aberto Transparente Maxi 70mm",d:"70mm",ref:"10387",cnp:"6398487",u:30},
+      {n:"Saco Ileo Alto Débito Opaco Magnum 1120ml 50mm",d:"50mm",ref:"19041",cnp:"7133579",u:30},
+      {n:"Saco Ileo Alto Débito Opaco Magnum 1080ml 60mm",d:"60mm",ref:"19042",cnp:"7133561",u:30},
+    ]},
+    {sys:"SenSura® Flex (2 peças) — Placas Adesivas",icon:"ti-layout-grid",items:[
+      {n:"Placa Adesiva Plana 35mm",d:"35mm",ref:"10101",cnp:"7016956",u:30},
+      {n:"Placa Adesiva Plana 50mm",d:"50mm",ref:"10102",cnp:"7016964",u:30},
+      {n:"Placa Adesiva Plana 70mm",d:"70mm",ref:"10103",cnp:"7016972",u:30},
+      {n:"Placa Adesiva Plana 90mm",d:"90mm",ref:"10108",cnp:"7016980",u:30},
+      {n:"Placa Adesiva Plana Xpro 35mm",d:"35mm",ref:"10104",cnp:"7016923",u:30},
+      {n:"Placa Adesiva Plana Xpro 50mm",d:"50mm",ref:"10105",cnp:"7016931",u:30},
+      {n:"Placa Adesiva Plana Xpro 70mm",d:"70mm",ref:"10106",cnp:"7016949",u:30},
+      {n:"Placa Adesiva Convexa Leve 35mm",d:"35mm",ref:"11301",cnp:"7016899",u:30},
+      {n:"Placa Adesiva Convexa Leve 50mm",d:"50mm",ref:"11303",cnp:"7016907",u:30},
+      {n:"Placa Adesiva Convexa Leve 70mm",d:"70mm",ref:"11307",cnp:"7016915",u:30},
+      {n:"Placa Adesiva Xpro Convexa Leve 35mm",d:"35mm",ref:"11304",cnp:"7016998",u:30},
+      {n:"Placa Adesiva Xpro Convexa Leve 50mm",d:"50mm",ref:"11306",cnp:"7017004",u:30},
+      {n:"Placa Adesiva Xpro Convexa Leve 70mm",d:"70mm",ref:"11308",cnp:"7017012",u:30},
+    ]},
+    {sys:"SenSura® Flex — Sacos Colostomia (fixação adesiva)",icon:"ti-bandage",items:[
+      {n:"Saco Colo Fechado Opaco Midi 35mm",d:"35mm",ref:"10904",cnp:"7017079",u:30},
+      {n:"Saco Colo Fechado Opaco Midi 50mm",d:"50mm",ref:"10905",cnp:"7017046",u:30},
+      {n:"Saco Colo Fechado Opaco Mini 50mm",d:"50mm",ref:"10895",cnp:"7017020",u:30},
+      {n:"Saco Colo Fechado Opaco Maxi 35mm",d:"35mm",ref:"10914",cnp:"7017079",u:30},
+      {n:"Saco Colo Fechado Opaco Maxi 50mm",d:"50mm",ref:"10915",cnp:"7017087",u:30},
+      {n:"Saco Colo Fechado Opaco Maxi 70mm",d:"70mm",ref:"10918",cnp:"7017103",u:30},
+      {n:"Saco Colo Fechado Transparente Maxi 35mm",d:"35mm",ref:"10911",cnp:"7017053",u:30},
+      {n:"Saco Colo Fechado Transparente Maxi 50mm",d:"50mm",ref:"10912",cnp:"7017061",u:30},
+      {n:"Saco Colo Fechado Transparente Maxi 70mm",d:"70mm",ref:"10917",cnp:"7017095",u:30},
+    ]},
+    {sys:"SenSura® Flex — Sacos Ileostomia (fixação adesiva)",icon:"ti-bandage",items:[
+      {n:"Saco Ileo Aberto Opaco Midi 35mm",d:"35mm",ref:"10314",cnp:"7017111",u:30},
+      {n:"Saco Ileo Aberto Opaco Midi 50mm",d:"50mm",ref:"10315",cnp:"7017129",u:30},
+      {n:"Saco Ileo Aberto Opaco Maxi 35mm",d:"35mm",ref:"10324",cnp:"7017152",u:30},
+      {n:"Saco Ileo Aberto Opaco Maxi 50mm",d:"50mm",ref:"10325",cnp:"7017160",u:30},
+      {n:"Saco Ileo Aberto Opaco Maxi 70mm",d:"70mm",ref:"10328",cnp:"7017186",u:30},
+      {n:"Saco Ileo Aberto Transparente Maxi 35mm",d:"35mm",ref:"10321",cnp:"7017137",u:30},
+      {n:"Saco Ileo Aberto Transparente Maxi 50mm",d:"50mm",ref:"10322",cnp:"7017145",u:30},
+      {n:"Saco Ileo Aberto Transparente Maxi 70mm",d:"70mm",ref:"10327",cnp:"7017178",u:30},
+      {n:"Saco Ileo Aberto Transparente XXL 90mm",d:"90mm",ref:"10390",cnp:"7017194",u:30},
+    ]},
+    {sys:"Alterna® — Placas",icon:"ti-layout-grid",items:[
+      {n:"Placa Fixação Mecânica Plana 40mm",d:"40mm",ref:"1771",cnp:"7921445",u:30},
+      {n:"Placa Fixação Mecânica Plana 50mm",d:"50mm",ref:"1776",cnp:"7921452",u:30},
+      {n:"Placa Fixação Mecânica Plana 60mm",d:"60mm",ref:"1779",cnp:"7921460",u:30},
+      {n:"Placa Fixação Mecânica Plana Extra 40mm",d:"40mm",ref:"2831",cnp:"7959023",u:30},
+      {n:"Placa Fixação Mecânica Plana Extra 50mm",d:"50mm",ref:"2832",cnp:"7959031",u:30},
+      {n:"Placa Fixação Mecânica Plana Extra 60mm",d:"60mm",ref:"2833",cnp:"7921478",u:30},
+      {n:"Placa Fixação Mecânica Convexa Deep 50mm",d:"50mm",ref:"46759",cnp:"7921486",u:30},
+      {n:"Placa Fixação Mecânica Convexa Deep 60mm",d:"60mm",ref:"46769",cnp:"7921833",u:30},
+    ]},
+    {sys:"Alterna® — Sacos Colostomia",icon:"ti-bandage",items:[
+      {n:"Saco Colo Fechado Opaco 1 Peça Midi rec. 20-55mm",d:"20-55mm",ref:"5776",cnp:"7921843",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça Maxi rec. 10-70mm",d:"10-70mm",ref:"5786",cnp:"7921874",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça Maxi Pré-rec. 30mm",d:"30mm",ref:"5790",cnp:"7921999",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça Maxi Pré-rec. 40mm",d:"40mm",ref:"5792",cnp:"7921841",u:30},
+      {n:"Saco Colo Fechado Transparente 1 Peça Maxi rec. 20-55mm",d:"20-55mm",ref:"5686",cnp:"7921858",u:30},
+      {n:"Saco Colo Fechado Transparente 1 Peça Maxi rec. 20-75mm",d:"20-75mm",ref:"6326",cnp:"7015100",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Midi 40mm",d:"40mm",ref:"1671",cnp:"7921528",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Midi 50mm",d:"50mm",ref:"1672",cnp:"7921536",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Midi 60mm",d:"60mm",ref:"1673",cnp:"7921577",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Maxi 40mm",d:"40mm",ref:"1681",cnp:"7921585",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Maxi 50mm",d:"50mm",ref:"1682",cnp:"7921593",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Maxi 60mm",d:"60mm",ref:"1683",cnp:"7016147",u:30},
+      {n:"Saco Colo Fechado Transparente 2 Peças Maxi 50mm",d:"50mm",ref:"1687",cnp:"7921627",u:30},
+      {n:"Saco Colo Fechado Transparente 2 Peças Maxi 60mm",d:"60mm",ref:"1688",cnp:"7016162",u:30},
+    ]},
+    {sys:"Alterna® — Sacos Ileostomia",icon:"ti-bandage",items:[
+      {n:"Saco Ileo Aberto Opaco 1 Peça Midi rec. 10-55mm",d:"10-55mm",ref:"5875",cnp:"7922039",u:30},
+      {n:"Saco Ileo Aberto Opaco 1 Peça Maxi rec. 10-70mm",d:"10-70mm",ref:"5885",cnp:"7922039",u:30},
+      {n:"Saco Ileo Aberto Opaco 1 Peça Mini rec. 12-65mm",d:"12-65mm",ref:"13810",cnp:"6007583",u:30},
+      {n:"Saco Ileo Aberto Opaco 1 Peça Midi rec. 12-65mm",d:"12-65mm",ref:"13840",cnp:"6007575",u:30},
+      {n:"Saco Ileo Aberto Opaco 1 Peça Maxi rec. 12-70mm",d:"12-70mm",ref:"13870",cnp:"6007526",u:30},
+      {n:"Saco Ileo Aberto Transparente 1 Peça Maxi rec. 12-70mm",d:"12-70mm",ref:"13860",cnp:"7762831",u:30},
+      {n:"Saco Ileo Aberto Opaco 2 Peças Midi 40mm",d:"40mm",ref:"13954",cnp:"7015412",u:30},
+      {n:"Saco Ileo Aberto Opaco 2 Peças Midi 50mm",d:"50mm",ref:"13955",cnp:"7015420",u:30},
+      {n:"Saco Ileo Aberto Opaco 2 Peças Midi 60mm",d:"60mm",ref:"13956",cnp:"7015438",u:30},
+      {n:"Saco Ileo Aberto Opaco 2 Peças Maxi 40mm",d:"40mm",ref:"13984",cnp:"6007500",u:30},
+      {n:"Saco Ileo Aberto Opaco 2 Peças Maxi 50mm",d:"50mm",ref:"13985",cnp:"6007518",u:30},
+      {n:"Saco Ileo Aberto Opaco 2 Peças Maxi 60mm",d:"60mm",ref:"13986",cnp:"7015188",u:30},
+      {n:"Saco Ileo Pediátrico 2 Peças 40mm",d:"40mm",ref:"1781",cnp:"6007537",u:30},
+    ]},
+    {sys:"Acessórios Brava® / Coloplast",icon:"ti-tool",items:[
+      {n:"Brava® Pasta em Tiras",d:"",ref:"2655",cnp:"6007716",u:1},
+      {n:"Brava® Anel Moldável",d:"",ref:"12042",cnp:"6007757",u:1},
+      {n:"Brava® Pó Cicatrizante",d:"",ref:"1907",cnp:"6007740",u:1},
+      {n:"Brava® Creme Barreira em Spray",d:"",ref:"12020",cnp:"7922179",u:1},
+      {n:"Coloplast® Película Proteção Cutânea em Toalhetes",d:"",ref:"62042",cnp:"7922153",u:1},
+      {n:"Coloplast® Creme de Barreira",d:"",ref:"66102",cnp:"6007724",u:1},
+      {n:"Brava® Tiras de Fixação",d:"",ref:"12070",cnp:"7921163",u:1},
+      {n:"Brava® Cinto Ajustável",d:"",ref:"421",cnp:"7921163",u:1},
+      {n:"Brava® Removedor de Adesivos em Spray",d:"",ref:"12010",cnp:"6007732",u:1},
+    ]},
+  ],
+  "Oxmed": [
+    {sys:"ZenSiv® — Placas",icon:"ti-layout-grid",items:[
+      {n:"ZenSiv® Placa Fixação Mecânica Ø50mm",d:"Ø50mm",ref:"B2N510",cnp:"7013292",u:5},
+      {n:"ZenSiv® Placa Fixação Mecânica Ø60mm",d:"Ø60mm",ref:"B2N610",cnp:"7009829",u:5},
+      {n:"ZenSiv® Placa Fixação Mecânica Ø70mm",d:"Ø70mm",ref:"B2N710",cnp:"7009837",u:5},
+      {n:"ZenSiv® Placa Fixação Mecânica Ø50mm (B2P)",d:"Ø50mm",ref:"B2P510",cnp:"7009860",u:5},
+      {n:"ZenSiv® Placa Fixação Mecânica Ø60mm (B2P)",d:"Ø60mm",ref:"B2P610",cnp:"7009878",u:5},
+      {n:"ZenSiv® Placa Fixação Mecânica Ø70mm (B2P)",d:"Ø70mm",ref:"B2P710",cnp:"7009894",u:5},
+      {n:"ZenSiv® Placa Fixação Mecânica Convexa Ø50mm",d:"Ø50mm",ref:"B2C510",cnp:"7133447",u:5},
+      {n:"ZenSiv® Placa Fixação Mecânica Convexa Ø60mm",d:"Ø60mm",ref:"B2C610",cnp:"7133439",u:5},
+    ]},
+    {sys:"ZenSiv® — Sacos Colostomia",icon:"ti-bandage",items:[
+      {n:"ZenSiv® Saco Colo Fechado Opaco 2 Peças Ø50mm",d:"Ø50mm",ref:"C2B5V",cnp:"7009910",u:15},
+      {n:"ZenSiv® Saco Colo Fechado Opaco 2 Peças Ø60mm",d:"Ø60mm",ref:"C2B6V",cnp:"7009928",u:15},
+      {n:"ZenSiv® Saco Colo Fechado Opaco 2 Peças Ø70mm",d:"Ø70mm",ref:"C2B7",cnp:"7009951",u:15},
+      {n:"ZenSiv® Saco Colo Fechado Opaco 1 Peça 10-60mm",d:"10-60mm",ref:"C1NB10V-HC-30",cnp:"7009746",u:30},
+      {n:"ZenSiv® Saco Colo Fechado Opaco 1 Peça 10-60mm (C1PB)",d:"10-60mm",ref:"C1PB10-30",cnp:"7009753",u:30},
+      {n:"LavaBlack® Saco Colo Fechado Opaco 1 Peça 10-60mm",d:"10-60mm",ref:"C1NZ10V",cnp:"7132647",u:20},
+      {n:"LavaBlack® Saco Colo Fechado Opaco 1 Peça 10-60mm (HC-30)",d:"10-60mm",ref:"C1NZ10V-HC-30",cnp:"7132639",u:30},
+    ]},
+    {sys:"ZenSiv® — Sacos Ileostomia",icon:"ti-bandage",items:[
+      {n:"ZenSiv® Saco Ileo Aberto Opaco 2 Peças Ø50mm",d:"Ø50mm",ref:"D2B5XV",cnp:"7009936",u:15},
+      {n:"ZenSiv® Saco Ileo Aberto Opaco 2 Peças Ø60mm",d:"Ø60mm",ref:"D2B6XV",cnp:"7009944",u:15},
+      {n:"ZenSiv® Saco Ileo Aberto Opaco 2 Peças Ø70mm",d:"Ø70mm",ref:"D2B7XV",cnp:"7009969",u:15},
+      {n:"ZenSiv® Saco Ileo Aberto Opaco 1 Peça 10-80mm",d:"10-80mm",ref:"D1NB10XV",cnp:"7009761",u:20},
+      {n:"LavaBlack® Saco Ileo Aberto Opaco 1 Peça 10-80mm",d:"10-80mm",ref:"D1FZ10XV",cnp:"7132613",u:20},
+      {n:"LavaBlack® Saco Ileo Aberto Opaco 1 Peça 10-80mm (D1NZ)",d:"10-80mm",ref:"D1NZ10XV",cnp:"7132621",u:20},
+    ]},
+    {sys:"Acessórios Oxmed / Ostoform",icon:"ti-tool",items:[
+      {n:"ZenSiv® Anel Moldável A2010 Ø50mm/2.5mm",d:"",ref:"A2010",cnp:"7009977",u:20},
+      {n:"Ostoform® Flowassist Seal OFA-S 15-23mm",d:"",ref:"OFA-S",cnp:"7129759",u:10},
+      {n:"Ostoform® Flowassist Seal OFA-M",d:"",ref:"OFA-M",cnp:"7129767",u:10},
+      {n:"Ostoform® Flowassist Seal OFA-L",d:"",ref:"OFA-L",cnp:"7129775",u:10},
+      {n:"Ostoform® Crest A1 BSFMz até 55mm",d:"",ref:"Crest A1",cnp:"7129742",u:10},
+      {n:"ZenSetiv® Tiras de Fixação A2015",d:"",ref:"A2015",cnp:"7010009",u:20},
+      {n:"ZenSetiv® Pó Cicatrizante A2018",d:"28.3g",ref:"A2018",cnp:"7009985",u:1},
+      {n:"ZenSetiv® Espessante de Efluente A2020",d:"90un",ref:"A2020",cnp:"7009993",u:90},
+      {n:"HYDRU®CARE Removedor de Adesivo Médico Spray 50ml",d:"50ml",ref:"HYDRU",cnp:"7019976",u:1},
+      {n:"TRIO® ELITE Removedor de Adesivo TR201",d:"50ml",ref:"TR201",cnp:"7008649",u:1},
+      {n:"TRIO® ELISSE Película Proteção Cutânea Toalhetes TR203",d:"Cx30",ref:"TR203",cnp:"7008656",u:30},
+      {n:"TRIO® ELISSE Película Proteção Cutânea Spray TR204",d:"50ml",ref:"TR204",cnp:"7008664",u:1},
+    ]},
+  ],
+  "Hollister": [
+    {sys:"Conform 2 / CeraPlus® — Sacos Colostomia 1 Peça",icon:"ti-bandage",items:[
+      {n:"Saco Colo Fechado Opaco 1 Peça c/Pré-recorte Midi 15-55mm",d:"15-55mm",ref:"22100",cnp:"7879619",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça Pré-rec. 25mm",d:"25mm",ref:"22125",cnp:"7879437",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça Pré-rec. 30mm",d:"30mm",ref:"22130",cnp:"7879452",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça Pré-rec. 35mm",d:"35mm",ref:"22135",cnp:"7879585",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça Pré-rec. 40mm",d:"40mm",ref:"22140",cnp:"7879601",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça Pré-rec. 45mm",d:"45mm",ref:"22145",cnp:"7009274",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça base plana recortável 15-55mm Maxi",d:"15-55mm",ref:"22300",cnp:"7009282",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça base plana oval recortável 15-75mm",d:"15-75mm",ref:"22301",cnp:"7879627",u:30},
+      {n:"Saco Colo Fechado Transparente 1 Peça base plana recortável 15-55mm",d:"15-55mm",ref:"22500",cnp:"7009290",u:30},
+      {n:"Saco Colo Fechado Transparente 1 Peça base plana oval recortável 15-75mm",d:"15-75mm",ref:"22400",cnp:"7009308",u:30},
+      {n:"Saco Colo Fechado Opaco 1 Peça base convexa recortável 15-51mm",d:"15-51mm",ref:"22801",cnp:"6399592",u:30},
+    ]},
+    {sys:"Conform 2 / CeraPlus® — Sacos Colostomia 2 Peças",icon:"ti-bandage",items:[
+      {n:"Saco Colo Fechado Opaco 2 Peças Midi anel 45mm",d:"45mm",ref:"24400",cnp:"7879478",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Midi anel 55mm",d:"55mm",ref:"25400",cnp:"7879486",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Midi anel 70mm",d:"70mm",ref:"27400",cnp:"7009316",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Maxi anel 45mm",d:"45mm",ref:"24420",cnp:"7009324",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Maxi anel 55mm",d:"55mm",ref:"25420",cnp:"7009332",u:30},
+      {n:"Saco Colo Fechado Opaco 2 Peças Maxi anel 70mm",d:"70mm",ref:"27420",cnp:"7009332",u:30},
+      {n:"Saco Colo Fechado Transparente 2 Peças Midi anel 45mm",d:"45mm",ref:"24500",cnp:"7879494",u:30},
+      {n:"Saco Colo Fechado Transparente 2 Peças Midi anel 55mm",d:"55mm",ref:"25500",cnp:"7879502",u:30},
+      {n:"Saco Colo Fechado Transparente 2 Peças Midi anel 70mm",d:"70mm",ref:"27500",cnp:"7879510",u:30},
+      {n:"Saco Colo Fechado Transparente 2 Peças Maxi anel 45mm",d:"45mm",ref:"24520",cnp:"7009340",u:30},
+      {n:"Saco Colo Fechado Transparente 2 Peças Maxi anel 55mm",d:"55mm",ref:"25520",cnp:"7009357",u:30},
+      {n:"Saco Colo Fechado Transparente 2 Peças Maxi anel 70mm",d:"70mm",ref:"27520",cnp:"7009365",u:30},
+    ]},
+    {sys:"Conform 2 / CeraPlus® — Sacos Ileostomia",icon:"ti-bandage",items:[
+      {n:"Saco Ileo Aberto Opaco 1 Peça base plana Mini rec. 15-55mm",d:"15-55mm",ref:"28100",cnp:"6206029",u:30},
+      {n:"Saco Ileo Aberto Opaco 1 Peça base plana Midi rec. 15-55mm",d:"15-55mm",ref:"28200",cnp:"6206037",u:30},
+      {n:"Saco Ileo Aberto Transparente 1 Peça base plana Midi rec. 15-55mm",d:"15-55mm",ref:"28500",cnp:"6206045",u:30},
+      {n:"Saco Ileo Aberto Opaco 1 Peça base convexa Midi rec. 15-51mm",d:"15-51mm",ref:"26801",cnp:"6399600",u:30},
+      {n:"Saco Ileo Aberto Opaco 2 Peças Midi anel 45mm",d:"45mm",ref:"24750",cnp:"6206110",u:30},
+      {n:"Saco Ileo Aberto Opaco 2 Peças Midi anel 55mm",d:"55mm",ref:"25750",cnp:"6206136",u:30},
+      {n:"Saco Ileo Aberto Opaco 2 Peças Midi anel 55mm (Alt.)",d:"55mm",ref:"25760",cnp:"6399626",u:30},
+      {n:"Saco Ileo Aberto Opaco 2 Peças Maxi anel 70mm",d:"70mm",ref:"27760",cnp:"6206151",u:30},
+      {n:"Saco Ileo Aberto Transparente 2 Peças Midi anel 45mm",d:"45mm",ref:"24850",cnp:"6206128",u:30},
+      {n:"Saco Ileo Aberto Transparente 2 Peças Midi anel 55mm",d:"55mm",ref:"25850",cnp:"6206144",u:30},
+      {n:"Saco Ileo Aberto Transparente 2 Peças Maxi anel 55mm",d:"55mm",ref:"25860",cnp:"6399618",u:30},
+      {n:"Saco Ileo Aberto Transparente 2 Peças Maxi anel 70mm",d:"70mm",ref:"27860",cnp:"6206169",u:30},
+    ]},
+    {sys:"CeraPlus® — Placas",icon:"ti-layout-grid",items:[
+      {n:"CeraPlus® Placa Plana 45mm",d:"45mm",ref:"14100",cnp:"7608547",u:5},
+      {n:"CeraPlus® Placa Plana 55mm",d:"55mm",ref:"15100",cnp:"7608554",u:5},
+      {n:"CeraPlus® Placa Plana 70mm",d:"70mm",ref:"17100",cnp:"7608562",u:5},
+      {n:"CeraPlus® Placa Plana c/Rebordo Adesivo 45mm",d:"45mm",ref:"14500",cnp:"7608596",u:5},
+      {n:"CeraPlus® Placa Plana c/Rebordo Adesivo 55mm",d:"55mm",ref:"15500",cnp:"7608489",u:5},
+      {n:"CeraPlus® Placa Plana c/Rebordo Adesivo 70mm",d:"70mm",ref:"17500",cnp:"7608497",u:5},
+      {n:"CeraPlus® Placa Convexidade Suave Reb.Ades. 45mm",d:"45mm",ref:"14A00",cnp:"7608505",u:5},
+      {n:"CeraPlus® Placa Convexidade Suave Reb.Ades. 55mm",d:"55mm",ref:"15A00",cnp:"7608513",u:5},
+      {n:"CeraPlus® Placa Convexidade Suave Reb.Ades. 70mm",d:"70mm",ref:"17A00",cnp:"7608521",u:5},
+      {n:"CeraPlus® Placa Convexa S/Reb.Ades. 45mm",d:"45mm",ref:"14200",cnp:"7608539",u:5},
+      {n:"CeraPlus® Placa Convexa S/Reb.Ades. 55mm",d:"55mm",ref:"15200",cnp:"7608604",u:5},
+      {n:"CeraPlus® Placa Convexa S/Reb.Ades. 70mm",d:"70mm",ref:"17200",cnp:"7608612",u:5},
+      {n:"CeraPlus® Placa Convexa Reb.Ades. 45mm",d:"45mm",ref:"14600",cnp:"7608620",u:5},
+      {n:"CeraPlus® Placa Convexa Reb.Ades. 55mm",d:"55mm",ref:"15600",cnp:"—",u:5},
+    ]},
+    {sys:"Acessórios Hollister",icon:"ti-tool",items:[
+      {n:"Anel CeraPlus 48mm",d:"",ref:"8805",cnp:"7608638",u:1},
+      {n:"Anel CeraPlus Fino 48mm",d:"",ref:"8815",cnp:"7608646",u:1},
+      {n:"Cinto ajustável 66-109cm",d:"",ref:"7300",cnp:"6399634",u:1},
+      {n:"Spray Removedor Adesivo 100ml",d:"100ml",ref:"7731",cnp:"7009506",u:1},
+      {n:"Toalhetes de Proteção Cutânea",d:"50un",ref:"7917",cnp:"7009514",u:50},
+      {n:"Pó Cicatrizante 28g",d:"28g",ref:"7906",cnp:"6206177",u:1},
+      {n:"Nivelador em Anel Ø48mm",d:"",ref:"7805",cnp:"6206185",u:1},
+      {n:"Nivelador em Anel Ø96mm",d:"",ref:"7806",cnp:"6206193",u:1},
+      {n:"Nivelador em Anel Convexo Ø20mm",d:"",ref:"79520",cnp:"6206219",u:1},
+      {n:"Nivelador em Anel Convexo Ø30mm",d:"",ref:"79530",cnp:"6206227",u:1},
+      {n:"Nivelador em Anel Convexo Ø40mm",d:"",ref:"79540",cnp:"7009522",u:1},
+      {n:"Pasta hidrocolóide Adapt 60g",d:"60g",ref:"79300",cnp:"7009530",u:1},
+      {n:"Lubrificante/Desodorizante Frasco 236ml",d:"236ml",ref:"78500",cnp:"7013300",u:1},
+      {n:"Filtro e barreira anti-odor recortável 30mm",d:"",ref:"3192",cnp:"7009555",u:1},
+      {n:"Filtro e barreira anti-odor recortável 40mm",d:"",ref:"3193",cnp:"6708305",u:1},
+      {n:"Kit de Irrigação",d:"",ref:"7719",cnp:"6636118",u:1},
+    ]},
+  ],
+  "Welland": [
+    {sys:"Placas — Fixação Mecânica Plana",icon:"ti-layout-grid",items:[
+      {n:"Placa Aurum 2 Plana 45mm",d:"45mm",ref:"XMH2F413",cnp:"7008359",u:5},
+      {n:"Placa Aurum 2 Plana 55mm",d:"55mm",ref:"XMH2F513",cnp:"7008409",u:5},
+      {n:"Placa Aurum 2 Plana 70mm",d:"70mm",ref:"XMH2F713",cnp:"7008417",u:5},
+    ]},
+    {sys:"Placas — Fixação Mecânica Convexa",icon:"ti-layout-grid",items:[
+      {n:"Placa Aurum 2 Convexa 45mm",d:"45mm",ref:"XMH2NF413",cnp:"7008342",u:5},
+      {n:"Placa Aurum 2 Convexa 55mm",d:"55mm",ref:"XMH2NF513",cnp:"7008367",u:5},
+      {n:"Placa Aurum 2 Convexa 70mm",d:"70mm",ref:"XMH2NF713",cnp:"7008375",u:5},
+    ]},
+    {sys:"Sacos Colostomia — 1 Peça Base Plana",icon:"ti-bandage",items:[
+      {n:"Saco Aurum Colo Op Maxi 13mm (60×80mm)",d:"60×80mm",ref:"XMHCL513",cnp:"7002303",u:30},
+      {n:"Saco Aurum Colo Op Midi 13mm (60×80mm)",d:"60×80mm",ref:"XMHCM513",cnp:"7002311",u:30},
+      {n:"Saco Aurum Colo Op Mini 13mm (50×70mm)",d:"50×70mm",ref:"XMHCS513",cnp:"7002956",u:30},
+      {n:"Saco Aurum Xtra Colo Op Maxi 19-50mm",d:"19-50mm",ref:"XMHFL519",cnp:"7008144",u:30},
+      {n:"Saco Aurum Xtra Colo Op Midi 19-50mm",d:"19-50mm",ref:"XMHFM519",cnp:"7008110",u:30},
+      {n:"Saco Aurum Xtra Colo Op Mini 19-50mm",d:"19-50mm",ref:"XMHFS519",cnp:"7003582",u:30},
+      {n:"Saco Stoma Cap 13mm (40×50mm)",d:"40×50mm",ref:"XMHSS513",cnp:"7019992",u:30},
+      {n:"Saco Aurum Plus Colo Maxi Cor Preta (60×80mm)",d:"60×80mm",ref:"X1C1A13S",cnp:"7027920",u:30,novo:true},
+      {n:"Saco Aurum Plus Colo Maxi Cor Areia (60×80mm)",d:"60×80mm",ref:"X1C1A23S",cnp:"7019984",u:30,novo:true},
+      {n:"Saco Aurum Plus Colo Midi Cor Preta (60×80mm)",d:"60×80mm",ref:"X1C1A12S",cnp:"7021527",u:30,novo:true},
+      {n:"Saco Aurum Plus Colo Midi Cor Areia (60×80mm)",d:"60×80mm",ref:"X1C1A22S",cnp:"7021527",u:30,novo:true},
+    ]},
+    {sys:"Sacos Colostomia — 1 Peça Base Convexa",icon:"ti-bandage",items:[
+      {n:"Saco Aurum Convex Colo Op Maxi (13-48mm)",d:"13-48mm",ref:"XMHNCL913",cnp:"6399147",u:10},
+      {n:"Saco Aurum Convex Colo Op Midi (13-48mm)",d:"13-48mm",ref:"XMHNCL513",cnp:"6399139",u:10},
+      {n:"Saco Aurum Profile Moldável Colo Op Maxi 13-48mm",d:"13-48mm",ref:"XMHCCL913",cnp:"6399121",u:10},
+      {n:"Saco Aurum Profile Moldável Colo Op Midi 13-48mm",d:"13-48mm",ref:"XMHCCL513",cnp:"6399113",u:10},
+    ]},
+    {sys:"Sacos Colostomia — 2 Peças Fixação Mecânica",icon:"ti-bandage",items:[
+      {n:"Saco Aurum 2 Colo Op Maxi 70mm",d:"70mm",ref:"XMH2C170",cnp:"7007278",u:30},
+      {n:"Saco Aurum 2 Colo Op Maxi 55mm",d:"55mm",ref:"XMH2C155",cnp:"7008338",u:30},
+      {n:"Saco Aurum 2 Colo Op Midi 55mm",d:"55mm",ref:"XMH2C555",cnp:"7006544",u:30},
+      {n:"Saco Aurum 2 Colo Op Maxi 45mm",d:"45mm",ref:"XMH2C145",cnp:"7003731",u:30},
+    ]},
+    {sys:"Sacos Ileostomia — 1 Peça Base Plana",icon:"ti-bandage",items:[
+      {n:"Saco Aurum Ileo Op Maxi 13mm (60×80mm)",d:"60×80mm",ref:"XMHDL513",cnp:"7004127",u:30},
+      {n:"Saco Aurum Ileo Op Midi 13mm (60×80mm)",d:"60×80mm",ref:"XMHDM513",cnp:"7004150",u:30},
+      {n:"Saco Aurum Ileo Op Mini 13mm (50×70mm)",d:"50×70mm",ref:"XMHDSS13",cnp:"7002794",u:30},
+      {n:"Saco Aurum Plus Ileo Maxi Cor Preta (60×80mm)",d:"60×80mm",ref:"X1D1A13S",cnp:"7027943",u:30,novo:true},
+      {n:"Saco Aurum Plus Ileo Maxi Cor Areia (60×80mm)",d:"60×80mm",ref:"X1D1A23S",cnp:"7033209",u:30,novo:true},
+      {n:"Saco Aurum Plus Ileo Midi Cor Preta (60×80mm)",d:"60×80mm",ref:"X1D1A12S",cnp:"7027938",u:30,novo:true},
+      {n:"Saco Aurum Plus Ileo Midi Cor Areia (60×80mm)",d:"60×80mm",ref:"X1D1A22S",cnp:"7027953",u:30,novo:true},
+    ]},
+    {sys:"Sacos Ileostomia — 1 Peça Base Convexa",icon:"ti-bandage",items:[
+      {n:"Saco Aurum Convex Ileo Op Maxi (13-48mm)",d:"13-48mm",ref:"XMHNDL913",cnp:"6399162",u:10},
+      {n:"Saco Aurum Convex Ileo Op Midi (13-48mm)",d:"13-48mm",ref:"XMHNDL513",cnp:"6399154",u:10},
+      {n:"Saco Aurum Profile Moldável Ileo Op Maxi 13-48mm",d:"13-48mm",ref:"XMHCDL913",cnp:"6399097",u:10},
+      {n:"Saco Aurum Profile Moldável Ileo Op Midi 13-48mm",d:"13-48mm",ref:"XMHCDL513",cnp:"6399113",u:10},
+      {n:"Saco Aurum Profile Moldável Ileo Op Mini 13-35mm",d:"13-35mm",ref:"XMHCDM413",cnp:"6399089",u:10},
+    ]},
+    {sys:"Sacos Ileostomia — 2 Peças Fixação Mecânica",icon:"ti-bandage",items:[
+      {n:"Saco Aurum 2 Ileo Op Maxi 70mm",d:"70mm",ref:"XMH2D170",cnp:"7008060",u:30},
+      {n:"Saco Aurum 2 Ileo Op Maxi 55mm",d:"55mm",ref:"XMH2D155",cnp:"7008052",u:30},
+      {n:"Saco Aurum 2 Ileo Op Midi 55mm",d:"55mm",ref:"XMH2D555",cnp:"7008227",u:30},
+      {n:"Saco Aurum 2 Ileo Op Maxi 45mm",d:"45mm",ref:"XMH2D145",cnp:"7008045",u:30},
+      {n:"Saco Aurum 2 Ileo Op Midi 45mm",d:"45mm",ref:"XMH2D545",cnp:"7008284",u:30},
+    ]},
+    {sys:"Acessórios Aurum® / Welland",icon:"ti-tool",items:[
+      {n:"Meias Luas c/ Mel Manuka Hidroframe Mini",d:"Cx20",ref:"XMHWAFM33",cnp:"7008573",u:20},
+      {n:"Meias Luas c/ Mel Manuka Hidroframe",d:"Cx20",ref:"XMHWAFH33",cnp:"7017707",u:20},
+      {n:"Meias Luas Aurum Transparentes Grande",d:"Cx20",ref:"XUFWAFH33",cnp:"7008516",u:20},
+      {n:"Anel Moldável c/ Mel Manuka Hiperseal 4mm",d:"Cx20",ref:"XMHWA400",cnp:"7008490",u:20},
+      {n:"Anel Moldável c/ Mel Manuka Hiperseal 2.5mm",d:"Cx1",ref:"XMHWA300",cnp:"7008557",u:1},
+      {n:"Cinto Flair Standard 120cm",d:"",ref:"XBLTS01",cnp:"7008540",u:1},
+      {n:"Cinto Flair Large 140cm",d:"",ref:"XBLTL01",cnp:"7008532",u:1},
+      {n:"Cinto Flair Large 145cm c/aro 82mm",d:"",ref:"XBLT182",cnp:"7008615",u:1},
+      {n:"Pasta para Estomas s/álcool Welland 100gr",d:"100g",ref:"WSP100",cnp:"7014589",u:1},
+      {n:"Pó Cicatrizante c/Aloe Vera 25gr",d:"25g",ref:"WPP025",cnp:"7008581",u:1},
+      {n:"Película Barreira Spray 50ml",d:"50ml",ref:"WBS050",cnp:"7008623",u:1},
+      {n:"Película Barreira Welland Toalhetes",d:"Cx50",ref:"WBF050",cnp:"7008631",u:50},
+      {n:"Removedor de Adesivos em Toalhetes",d:"",ref:"WAD050",cnp:"—",u:1},
+      {n:"Removedor de Adesivos em Spray",d:"",ref:"WAB050",cnp:"7008599",u:1},
+    ]},
+  ],
+  "B.Braun": [
+    {sys:"Flexima® 3S — 2 Peças Colostomia (Sacos Fechados)",icon:"ti-bandage",items:[
+      {n:"Flexima® 3S Colo Bege 45mm",d:"45mm",ref:"931045L",cnp:"7751693",u:30},
+      {n:"Flexima® 3S Colo Bege 55mm",d:"55mm",ref:"931055L",cnp:"7751701",u:30},
+      {n:"Flexima® 3S Colo Bege 65mm",d:"65mm",ref:"931065L",cnp:"7751719",u:30},
+      {n:"Flexima® 3S Colo Maxi Bege 45mm",d:"45mm",ref:"931445L",cnp:"7751628",u:30},
+      {n:"Flexima® 3S Colo Maxi Bege 55mm",d:"55mm",ref:"931455L",cnp:"7751636",u:30},
+      {n:"Flexima® 3S Colo Maxi Bege 65mm",d:"65mm",ref:"931465L",cnp:"7751644",u:30},
+      {n:"Flexima® 3S Colo Maxi Bege 80mm",d:"80mm",ref:"931480L",cnp:"7751651",u:30},
+      {n:"Flexima® 3S Colo Maxi Transparente 45mm",d:"45mm",ref:"931545L",cnp:"7751586",u:30},
+      {n:"Flexima® 3S Colo Maxi Transparente 55mm",d:"55mm",ref:"931555L",cnp:"7751594",u:30},
+      {n:"Flexima® 3S Colo Maxi Transparente 65mm",d:"65mm",ref:"931565L",cnp:"7751602",u:30},
+      {n:"Flexima® 3S Colo Maxi Transparente 80mm",d:"80mm",ref:"931580L",cnp:"7751610",u:30},
+    ]},
+    {sys:"Flexima® 3S — Placas",icon:"ti-layout-grid",items:[
+      {n:"Placa Plana Flexima® 3S 45/≥<15-30mm",d:"45mm",ref:"936415L",cnp:"7751958",u:5},
+      {n:"Placa Plana Flexima® 3S 45/20mm",d:"45mm",ref:"936420L",cnp:"7751966",u:5},
+      {n:"Placa Plana Flexima® 3S 45/25mm",d:"45mm",ref:"936425L",cnp:"7751974",u:5},
+      {n:"Placa Plana Flexima® 3S 45/30mm",d:"45mm",ref:"936430L",cnp:"7751982",u:5},
+      {n:"Placa Plana Flexima® 3S 55/≥<15-40mm",d:"55mm",ref:"936515L",cnp:"7751990",u:5},
+      {n:"Placa Plana Flexima® 3S 55/35mm",d:"55mm",ref:"936535L",cnp:"7752006",u:5},
+      {n:"Placa Plana Flexima® 3S 55/40mm",d:"55mm",ref:"936540L",cnp:"7752014",u:5},
+      {n:"Placa Plana Flexima® 3S 65/≥<15-50mm",d:"65mm",ref:"936615L",cnp:"7752022",u:5},
+      {n:"Placa Plana Flexima® 3S 65/45mm",d:"65mm",ref:"936645L",cnp:"7752030",u:5},
+      {n:"Placa Plana Flexima® 3S 80/≥<15-65mm",d:"80mm",ref:"936815L",cnp:"7752048",u:5},
+      {n:"Placa Convexa Flexima® 3S 45/≥<15-26mm",d:"45mm",ref:"937415L",cnp:"7752055",u:5},
+      {n:"Placa Convexa Flexima® 3S 45/25mm",d:"45mm",ref:"937425L",cnp:"7752071",u:5},
+      {n:"Placa Convexa Flexima® 3S 55/≥<15-36mm",d:"55mm",ref:"937515L",cnp:"7752089",u:5},
+      {n:"Placa Convexa Flexima® 3S 65/≥<15-46mm",d:"65mm",ref:"937615L",cnp:"7752113",u:5},
+    ]},
+    {sys:"Flexima® Key — 2 Peças Colostomia (Sacos Fechados)",icon:"ti-bandage",items:[
+      {n:"Flexima® Key Colo Bege 40mm",d:"40mm",ref:"62140L",cnp:"6152439",u:30},
+      {n:"Flexima® Key Colo Bege 50mm",d:"50mm",ref:"62150L",cnp:"6152413",u:30},
+      {n:"Flexima® Key Colo Bege 60mm",d:"60mm",ref:"62160L",cnp:"6152421",u:30},
+      {n:"Flexima® Key Colo Bege 80mm",d:"80mm",ref:"62180L",cnp:"6152447",u:30},
+      {n:"Flexima® Key Colo Transparente 40mm",d:"40mm",ref:"62240L",cnp:"6152454",u:30},
+      {n:"Flexima® Key Colo Transparente 50mm",d:"50mm",ref:"62250L",cnp:"6152462",u:30},
+      {n:"Flexima® Key Colo Transparente 60mm",d:"60mm",ref:"62260L",cnp:"6152470",u:30},
+      {n:"Flexima® Key Colo Transparente 80mm",d:"80mm",ref:"62280L",cnp:"6152488",u:30},
+    ]},
+    {sys:"Flexima® Key — Placas",icon:"ti-layout-grid",items:[
+      {n:"Placa Plana Flexima® Key 40/≥<15-35mm",d:"40mm",ref:"62040L",cnp:"6152660",u:5},
+      {n:"Placa Plana Flexima® Key 50/≥<15-45mm",d:"50mm",ref:"62050L",cnp:"6152678",u:5},
+      {n:"Placa Plana Flexima® Key 60/≥<15-55mm",d:"60mm",ref:"62060L",cnp:"6152686",u:5},
+      {n:"Placa Plana Flexima® Key 80/≥<15-75mm",d:"80mm",ref:"62080L",cnp:"6152694",u:5},
+      {n:"Placa Convexa Flexima® Key 50/≥<15-25mm",d:"50mm",ref:"62052L",cnp:"6197616",u:5},
+      {n:"Placa Convexa Flexima® Key 60/≥<15-35mm",d:"60mm",ref:"62062L",cnp:"6197632",u:5},
+      {n:"Placa Convexa Flexima® Key 60/≥<15-45mm",d:"60mm",ref:"62063L",cnp:"6197640",u:5},
+      {n:"Placa Convexa Flexima® Key 60/25mm",d:"60mm",ref:"62064L",cnp:"6197657",u:5},
+      {n:"Placa Convexa Flexima® Key 60/30mm",d:"60mm",ref:"62066L",cnp:"6197665",u:5},
+      {n:"Placa Convexa Flexima® Key 60/35mm",d:"60mm",ref:"62067L",cnp:"6197673",u:5},
+    ]},
+    {sys:"Flexima® 3S — 2 Peças Ileostomia (Sacos Roll'Up)",icon:"ti-bandage",items:[
+      {n:"Flexima® 3S Ileo Bege 45mm",d:"45mm",ref:"932045L",cnp:"7751867",u:30},
+      {n:"Flexima® 3S Ileo Bege 55mm",d:"55mm",ref:"932055L",cnp:"7751875",u:30},
+      {n:"Flexima® 3S Ileo Bege 65mm",d:"65mm",ref:"9320 la5L",cnp:"7751859",u:30},
+      {n:"Flexima® 3S Ileo Maxi Bege 45mm",d:"45mm",ref:"932445L",cnp:"7751818",u:30},
+      {n:"Flexima® 3S Ileo Maxi Bege 55mm",d:"55mm",ref:"932455L",cnp:"7751800",u:30},
+      {n:"Flexima® 3S Ileo Maxi Bege 65mm",d:"65mm",ref:"932465L",cnp:"7751792",u:30},
+      {n:"Flexima® 3S Ileo Maxi Bege 80mm",d:"80mm",ref:"932480L",cnp:"7751784",u:30},
+      {n:"Flexima® 3S Ileo Transparente 45mm",d:"45mm",ref:"932145L",cnp:"7751826",u:30},
+      {n:"Flexima® 3S Ileo Transparente 55mm",d:"55mm",ref:"932155L",cnp:"7751834",u:30},
+      {n:"Flexima® 3S Ileo Transparente 65mm",d:"65mm",ref:"932165L",cnp:"7751842",u:30},
+      {n:"Flexima® 3S Ileo Maxi Transparente 55mm",d:"55mm",ref:"932555L",cnp:"7751750",u:30},
+      {n:"Flexima® 3S Ileo Maxi Transparente 65mm",d:"65mm",ref:"932565L",cnp:"7751768",u:30},
+      {n:"Flexima® 3S Ileo Maxi Transparente 80mm",d:"80mm",ref:"932580L",cnp:"7751776",u:30},
+    ]},
+    {sys:"Flexima® Key — 2 Peças Ileostomia (Sacos Roll'Up)",icon:"ti-bandage",items:[
+      {n:"Flexima® Key Ileo Bege 40mm",d:"40mm",ref:"621241L",cnp:"6033662",u:30},
+      {n:"Flexima® Key Ileo Bege 50mm",d:"50mm",ref:"621251L",cnp:"6033688",u:30},
+      {n:"Flexima® Key Ileo Bege Maxi 60mm",d:"60mm",ref:"621261L",cnp:"6033712",u:30},
+      {n:"Flexima® Key Ileo Bege Maxi 80mm",d:"80mm",ref:"621281L",cnp:"7471086",u:30},
+      {n:"Flexima® Key Ileo Transparente Médio 40mm",d:"40mm",ref:"621240L",cnp:"6033654",u:30},
+      {n:"Flexima® Key Ileo Transparente Médio 50mm",d:"50mm",ref:"621250L",cnp:"6033696",u:30},
+      {n:"Flexima® Key Transparente Maxi 60mm",d:"60mm",ref:"621260L",cnp:"6033704",u:30},
+      {n:"Flexima® Key Transparente Maxi 80mm",d:"80mm",ref:"621280L",cnp:"6033720",u:30},
+    ]},
+    {sys:"Flexima® Active — 1 Peça Ileostomia (Sacos Roll'Up)",icon:"ti-bandage",items:[
+      {n:"Flexima® Active Ileo Bege Mini c/Janela ≥<15-45mm",d:"≥<15-45mm",ref:"4622215L",cnp:"7129270",u:30},
+      {n:"Flexima® Active Ileo Bege Médio c/Janela ≥<15-50mm",d:"≥<15-50mm",ref:"4622115L",cnp:"7129262",u:30},
+      {n:"Flexima® Active Ileo Bege Maxi c/Janela ≥<15-65mm",d:"≥<15-65mm",ref:"4622380L",cnp:"7129254",u:30},
+      {n:"Flexima® Active O'Convex Ileo Bege Médio c/Janela ≥<15-45mm",d:"≥<15-45mm",ref:"4622716L",cnp:"7129544",u:10},
+      {n:"Flexima® Active O'Convex Ileo Bege Maxi c/Janela ≥<15-35mm",d:"≥<15-35mm",ref:"4622715L",cnp:"7129536",u:10},
+      {n:"Flexima® Active O'Convex Ileo Bege Maxi c/Janela ≥<15-45mm",d:"≥<15-45mm",ref:"4622717L",cnp:"7129528",u:10},
+      {n:"Flexima® Active O'Convex Ileo Transp. Maxi ≥<15-45mm",d:"≥<15-45mm",ref:"4621716L",cnp:"7129510",u:10},
+    ]},
+    {sys:"Flexima® — 1 Peça Ileostomia (Sacos Roll'Up)",icon:"ti-bandage",items:[
+      {n:"Flexima® Ileo Bege Médio ≥<15-60mm",d:"≥<15-60mm",ref:"42715L",cnp:"6294397",u:30},
+      {n:"Flexima® Ileo Bege Médio c/Janela ≥<15-60mm",d:"≥<15-60mm",ref:"42716L",cnp:"7129189",u:30},
+      {n:"Flexima® Ileo Bege Maxi c/Janela ≥<15-75mm",d:"≥<15-75mm",ref:"42776L",cnp:"7129171",u:30},
+      {n:"Flexima® Ileo Bege Médio 25mm",d:"25mm",ref:"42725L",cnp:"7009712",u:30},
+      {n:"Flexima® Ileo Bege Médio 30mm",d:"30mm",ref:"42730L",cnp:"7471052",u:30},
+      {n:"Flexima® Ileo Bege Médio 40mm",d:"40mm",ref:"42740L",cnp:"7471078",u:30},
+      {n:"Flexima® Ileo Convexo Bege Médio ≥<15-45mm",d:"≥<15-45mm",ref:"42718L",cnp:"7471045",u:10},
+      {n:"Flexima® Ileo Convexo Transparente Médio ≥<15-45mm",d:"≥<15-45mm",ref:"42818L",cnp:"6033639",u:10},
+      {n:"Flexima® Ileo Transparente Médio ≥<15-60mm",d:"≥<15-60mm",ref:"42815L",cnp:"6294405",u:30},
+    ]},
+    {sys:"Flexima® — 1 Peça Colostomia (Sacos Fechados)",icon:"ti-bandage",items:[
+      {n:"Flexima® Colo Bege Médio ≥<15-60mm",d:"≥<15-60mm",ref:"044015L",cnp:"6197400",u:30},
+      {n:"Flexima® Colo Bege Maxi c/Janela ≥<15-75mm",d:"≥<15-75mm",ref:"044070L",cnp:"6125732",u:30},
+      {n:"Flexima® Colo Bege Médio 25mm",d:"25mm",ref:"044025L",cnp:"6125674",u:30},
+      {n:"Flexima® Colo Bege Médio 30mm",d:"30mm",ref:"044030L",cnp:"6125682",u:30},
+      {n:"Flexima® Colo Bege Médio 35mm",d:"35mm",ref:"044035L",cnp:"6125690",u:30},
+      {n:"Flexima® Colo Bege Médio 40mm",d:"40mm",ref:"044040L",cnp:"6125716",u:30},
+      {n:"Flexima® Colo Bege Médio 45mm",d:"45mm",ref:"044045L",cnp:"6125724",u:30},
+      {n:"Flexima® Mini Colo Bege ≥<15-45mm",d:"≥<15-45mm",ref:"44212L",cnp:"6125757",u:30},
+      {n:"Flexima® Colo Convexo Bege Médio ≥<15-45mm",d:"≥<15-45mm",ref:"44018L",cnp:"6197418",u:10},
+      {n:"Flexima® Colo Maxi Transparente ≥<15-75mm",d:"≥<15-75mm",ref:"044170L",cnp:"6125740",u:30},
+      {n:"Flexima® Colo Convexa Transparente ≥<15-45mm",d:"≥<15-45mm",ref:"44118L",cnp:"7471037",u:10},
+      {n:"Flexima® Active Colo Bege Mini c/Janela ≥<15-45mm",d:"≥<15-45mm",ref:"4612215L",cnp:"7129304",u:30},
+      {n:"Flexima® Active Colo Bege Médio c/Janela ≥<15-50mm",d:"≥<15-50mm",ref:"4612115L",cnp:"7129296",u:30},
+      {n:"Flexima® Active Colo Bege Maxi c/Janela ≥<15-65mm",d:"≥<15-65mm",ref:"4612380L",cnp:"7129288",u:30},
+      {n:"Flexima® Active O'Convex Colo Bege Médio c/Janela ≥<15-45mm",d:"≥<15-45mm",ref:"4612716L",cnp:"7129502",u:10},
+    ]},
+    {sys:"Proxima® 2+ / Proxima® 2 — Colostomia",icon:"ti-bandage",items:[
+      {n:"Proxima® 2+ Colo Bege 40mm",d:"40mm",ref:"74140L",cnp:"7019851",u:30},
+      {n:"Proxima® 2+ Colo Bege 50mm",d:"50mm",ref:"74150L",cnp:"6399998",u:30},
+      {n:"Proxima® 2+ Colo Bege 60mm",d:"60mm",ref:"74160L",cnp:"6399980",u:30},
+      {n:"Proxima® 2+ Colo Bege 80mm",d:"80mm",ref:"74180L",cnp:"6399972",u:30},
+      {n:"Placa Plana Proxima® 2 40/≥<12-35mm",d:"40mm",ref:"73040L",cnp:"6177741",u:10},
+      {n:"Placa Plana Proxima® 2 50/≥<12-45mm",d:"50mm",ref:"73050L",cnp:"6177758",u:10},
+      {n:"Placa Plana Proxima® 2 60/≥<12-65mm",d:"60mm",ref:"73060L",cnp:"6177766",u:10},
+      {n:"Placa Plana Proxima® 2 80/≥<12-75mm",d:"80mm",ref:"73080L",cnp:"6177774",u:10},
+      {n:"Proxima® +1 Bege ≥<10-70mm",d:"≥<10-70mm",ref:"54010L",cnp:"7019877",u:30},
+      {n:"Proxima® +1 Transparente ≥<10-70mm",d:"≥<10-70mm",ref:"54110L",cnp:"7019869",u:30},
+    ]},
+    {sys:"Acessórios Ally® / B.Braun",icon:"ti-tool",items:[
+      {n:"Ally® Removedor de Adesivos",d:"",ref:"200 same-1",cnp:"7130617",u:1},
+      {n:"Ally® Cinto de Ostomia",d:"",ref:"5028L",cnp:"7471003",u:1},
+      {n:"Ally® Barrier Film Spray Protetor 28ml",d:"28ml",ref:"5036",cnp:"7129551",u:1},
+      {n:"Ally® Anel Moldável Proteção Cutânea 3mm",d:"Cx10",ref:"2022483",cnp:"7132654",u:10},
+      {n:"Ally® Pó para Ostomia 28gr",d:"28g",ref:"2022100",cnp:"7133082",u:1},
+      {n:"Ally® Pasta (sem álcool) 80gr",d:"80g",ref:"2022200",cnp:"7133074",u:1},
+      {n:"Ally® Tiras de Fixação 80mm",d:"Cx20",ref:"2022300",cnp:"7133066",u:20},
+      {n:"Ileo Gel+",d:"Cx60",ref:"OXMA2020BB",cnp:"7129585",u:60},
+    ]},
+  ],
+};
+
+const brands = Object.keys(CATALOG);
+let activeBrand = brands[0];
+const selected = {};
+
+function K(brand, ref) { return brand + '||' + ref; }
+
+function renderTabs() {
+    document.getElementById('brandTabs').innerHTML = brands.map(b =>
+        `<button class="btab ${b === activeBrand ? 'on' : ''}" onclick="sw('${b}')">${b}</button>`
+    ).join('');
+}
+
+function sw(b) { 
+    activeBrand = b; 
+    renderTabs(); 
+    renderCatalog(); 
+}
+
+function renderCatalog() {
+    const secs = CATALOG[activeBrand];
+    let html = '';
+    
+    secs.forEach(s => {
+        html += `<div class="cat-section">
+            <div class="cat-header"><i class="ti ${s.icon}"></i> ${s.sys}</div>
+            <div class="card" style="padding:0">`;
+        
+        s.items.forEach(p => {
+            const k = K(activeBrand, p.ref);
+            const sel = selected[k];
+            const qty = sel ? sel.qty : 1;
+            
+            html += `
+            <div class="product-row ${sel ? 'selected' : ''}" onclick="tog('${activeBrand}','${p.ref}','${p.n.replace(/'/g,"\'")}','${p.cnp}')">
+                <div class="checkbox-custom">
+                    ${sel ? '<i class="ti ti-check"></i>' : ''}
+                </div>
+                <div class="p-info">
+                    <span class="p-name">${p.n}${p.novo ? '<span class="novo-badge">NOVO</span>' : ''}</span>
+                    <span class="p-meta">Ref: ${p.ref} | CNP: ${p.cnp} <span class="p-diam">${p.d || '—'}</span></span>
+                </div>
+                ${sel ? `
+                <div class="qty-ctrl" onclick="event.stopPropagation()">
+                    <button class="qty-btn" onclick="chQ('${activeBrand}','${p.ref}','${p.n.replace(/'/g,"\'")}','${p.cnp}',-1)">−</button>
+                    <span style="min-width:20px; text-align:center; font-weight:bold">${qty}</span>
+                    <button class="qty-btn" onclick="chQ('${activeBrand}','${p.ref}','${p.n.replace(/'/g,"\'")}','${p.cnp}',1)">+</button>
+                </div>` : ''}
+            </div>`;
+        });
+        
+        html += `</div></div>`;
+    });
+    
+    document.getElementById('catalogArea').innerHTML = html;
+}
+
+function tog(brand, ref, name, cnp) {
+    const k = K(brand, ref);
+    if (selected[k]) {
+        delete selected[k];
+    } else {
+        selected[k] = { brand, ref, name, cnp, qty: 1 };
+    }
+    renderCatalog();
+    renderCart();
+}
+
+function chQ(brand, ref, name, cnp, d) {
+    const k = K(brand, ref);
+    if (!selected[k]) return;
+    selected[k].qty = Math.max(1, selected[k].qty + d);
+    renderCatalog();
+    renderCart();
+}
+
+function renderCart() {
+    const items = Object.values(selected);
+    const el = document.getElementById('cartBox');
+    if (!items.length) {
+        el.innerHTML = '<p style="text-align:center; color:var(--text-sec); font-style:italic;">Nenhum produto selecionado</p>';
+        return;
+    }
+    el.innerHTML = items.map(i => `
+        <div class="cart-item">
+            <span>${i.name}</span>
+            <span class="cart-qty">${i.qty} cx</span>
+        </div>
+    `).join('');
+}
+
+function showErr(id, s) {
+    const e = document.getElementById('e_' + id);
+    const inp = document.getElementById('f_' + id);
+    if (e) e.style.display = s ? 'block' : 'none';
+    if (inp) inp.classList.toggle('rerr', s);
+}
+
+function enviar() {
+    const nome = document.getElementById('f_nome').value.trim();
+    const proc = document.getElementById('f_proc').value.trim();
+    const sns = document.getElementById('f_sns').value.trim();
+    const tel = document.getElementById('f_tel').value.trim();
+    const dob = document.getElementById('f_dob').value;
+    const tipo = document.getElementById('f_tipo').value;
+    const emailD = document.getElementById('f_email').value.trim();
+    const medico = document.getElementById('f_medico').value.trim();
+    const obs = document.getElementById('f_obs').value.trim();
+    const items = Object.values(selected);
+
+    let ok = true;
+    [['nome', nome], ['proc', proc], ['sns', sns], ['tel', tel]].forEach(([id, v]) => {
+        const err = !v;
+        showErr(id, err);
+        if (err) ok = false;
+    });
+
+    if (!ok) {
+        document.getElementById('f_nome').scrollIntoView({ behavior: 'smooth' });
+        alert('Por favor, preencha todos os campos obrigatórios (*)');
+        return;
+    }
+
+    if (!items.length && !obs) {
+        alert('Por favor, selecione pelo menos um produto ou adicione observações.');
+        return;
+    }
+
+    const lista = items.length ? items.map(i => `  • ${i.brand} | ${i.name}
+    Ref: ${i.ref} | CNP: ${i.cnp} | Qtd: ${i.qty} cx`).join('
+
+') : '  (Sem produtos selecionados no catálogo)';
+    
+    const body = [
+        'CONSULTA DE ESTOMATERAPIA — HSFX',
+        'Pedido de Material de Ostomia',
+        '═════════════════════════════════════════',
+        '',
+        'DADOS DO DOENTE',
+        `Nome: ${nome}`,
+        `Nº de processo: ${proc}`,
+        `Nº de utente SNS: ${sns}`,
+        dob ? `Data de nascimento: ${dob}` : '',
+        tipo ? `Tipo de ostomia: ${tipo}` : '',
+        `Contacto telefónico: ${tel}`,
+        emailD ? `E-mail: ${emailD}` : '',
+        medico ? `Médico prescritor: ${medico}` : '',
+        '',
+        'MATERIAL SOLICITADO',
+        '─────────────────────────────────────────',
+        lista,
+        obs ? `
+
+OBSERVAÇÕES / REFERÊNCIAS ADICIONAIS
+${obs}` : '',
+        '',
+        '─────────────────────────────────────────',
+        `Data: ${new Date().toLocaleDateString('pt-PT')}`,
+        'Pedido gerado via App de Estomaterapia HSFX',
+    ].filter(l => l !== '').join('
+');
+
+    const subj = encodeURIComponent(`Pedido ostomia — ${nome} — Proc. ${proc}`);
+    const contactEmail = 'Fmatos@ulslo.min-saude.pt';
+    
+    window.location.href = `mailto:${contactEmail}?subject=${subj}&body=${encodeURIComponent(body)}`;
+}
+
+renderTabs();
+renderCatalog();
+renderCart();
+</script>
+
+</body>
+</html>
